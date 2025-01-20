@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
+    <uses-permission android:name="android.permission.CAMERA" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -12,6 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         >
+        <!-- 카메라 권한 추가 -->
+
         <!-- SplashActivity를 첫 화면으로 설정 -->
 <!--        <activity android:name=".SplashActivity"-->
 <!--            android:exported="true"-->
@@ -38,7 +41,7 @@
         <!-- FileProvider 설정 -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.camera_app"
+            android:authorities="com.example.test_1.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
