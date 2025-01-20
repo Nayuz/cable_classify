@@ -1,5 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 외부 저장소의 디렉토리 설정 -->
     <external-path
-        name="images"
-        path="Android/data/com.example.cameraapp/files/Pictures/" />
+        name="external_files"
+        path="." />
+    <!-- 내부 저장소의 디렉토리 설정 -->
+    <files-path
+        name="internal_files"
+        path="." />
 </paths>
