@@ -779,3 +779,6 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/androidstudio,android,python,kotlin,java,visualstudiocode,visualstudio
+
+
+.DS_Store
