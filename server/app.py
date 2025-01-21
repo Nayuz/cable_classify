@@ -14,6 +14,8 @@ class_names = {
     3: "USB-C",
     4: "hdmi"
 }
+# 신뢰도 임계값 설정
+CONFIDENCE_THRESHOLD = 0.3  # 최소 신뢰도 설정 (0.3 = 30%)
 
 # 모델 로드
 print("모델 로드 중...")
@@ -36,12 +38,14 @@ def predict():
         predictions = []
         for result in results:
             for box in result.boxes:
-                predictions.append({
-                    "class_id": int(box.cls),
-                    "class_name": class_names.get(int(box.cls), "Unknown"),
-                    "confidence": float(box.conf),
-                    "coordinates": box.xyxy.tolist()  # [xmin, ymin, xmax, ymax]
-                })
+                confidence = float(box.conf)
+                if confidence >= CONFIDENCE_THRESHOLD:  # 신뢰도 임계값 필터링
+                    predictions.append({
+                        "class_id": int(box.cls),
+                        "class_name": class_names.get(int(box.cls), "Unknown"),
+                        "confidence": confidence,
+                        "coordinates": box.xyxy.tolist()  # [xmin, ymin, xmax, ymax]
+                    })
 
         return jsonify({"predictions": predictions})
 
