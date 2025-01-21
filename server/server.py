@@ -14,6 +14,8 @@ class_names = {
     3: "USB-C",
     4: "hdmi"
 }
+# 신뢰도 임계값 설정
+CONFIDENCE_THRESHOLD = 0.3  # 최소 신뢰도 설정 (0.3 = 30%)
 
 # 신뢰도 임계값 설정
 CONFIDENCE_THRESHOLD = 0.3  # 최소 신뢰도 설정 (0.3 = 30%)
@@ -57,6 +59,6 @@ def predict():
 
 if __name__ == '__main__':
     host = '0.0.0.0'
-    port = 5000
+    port = 25565
     print(f"서버 대기 중: http://{host}:{port}")
     app.run(host=host, port=port)
