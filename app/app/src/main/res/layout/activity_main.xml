@@ -26,4 +26,21 @@
         android:layout_marginTop="16dp"
         android:visibility="gone"/>
 
+    <!-- 앨범에 저장 버튼 -->
+    <Button
+        android:id="@+id/saveToAlbumButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save to Album"
+        android:visibility="gone"
+        android:layout_marginTop="16dp" />
+
+    <!-- 앨범 열기 버튼 -->
+    <Button
+        android:id="@+id/openAlbumButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open Album"
+        android:layout_marginTop="16dp" />
+
 </LinearLayout>
