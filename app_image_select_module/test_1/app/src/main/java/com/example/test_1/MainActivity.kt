@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
@@ -16,7 +17,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.example.test_1.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -27,6 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var uploadButton: Button  // 업로드 버튼 변수 선언
     // 카메라 권한 요청 코드
     private val CAMERA_PERMISSION_REQUEST_CODE = 100
     // 이미지 캡처 요청 코드
@@ -35,14 +40,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imageView: ImageView
     // 촬영한 사진의 경로를 저장할 변수
     private var currentPhotoPath: String = ""
+    private var bitmap: Bitmap? = null // 비트맵을 전역 변수로 저장
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 이미지뷰와 버튼 초기화
+        // 레이아웃에서 이미지뷰와 버튼 초기화
         imageView = findViewById(R.id.imageView)
         val takePictureButton: Button = findViewById(R.id.takePictureButton)
+        uploadButton = findViewById(R.id.uploadButton) // 새로 추가된 버튼
+
+        // 초기 상태에서 업로드 버튼 숨기기
+        uploadButton.visibility = View.GONE
 
         // 카메라 권한이 부여되어 있는지 확인
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -51,7 +61,15 @@ class MainActivity : AppCompatActivity() {
         } else {
             // 권한이 있다면 버튼 클릭 시 사진 촬영 시작
             takePictureButton.setOnClickListener {
-                dispatchTakePictureIntent()
+                dispatchTakePictureIntent()  // 사진 촬영 인텐트 시작
+            }
+        }
+        // 업로드 버튼 클릭 리스너
+        uploadButton.setOnClickListener {
+            if (bitmap != null) {
+                uploadImage(bitmap!!)  // 비트맵이 있을 경우 업로드
+            } else {
+                Toast.makeText(this, "No image to upload", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -63,7 +81,6 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // 권한이 승인되었으면 사진 촬영 시작
                 dispatchTakePictureIntent()
-                println("good")
             } else {
                 // 권한이 거부되었으면 메시지 표시
                 showPermissionDeniedMessage()
@@ -71,7 +88,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 권한 거부 시 사용자에게 알림
+    // 권한 거부 시 사용자에게 알림 메시지 표시
     private fun showPermissionDeniedMessage() {
         Toast.makeText(this, "Camera permission is required to take a picture", Toast.LENGTH_LONG).show()
     }
@@ -92,7 +109,7 @@ class MainActivity : AppCompatActivity() {
             photoFile?.let {
                 val photoURI: Uri = FileProvider.getUriForFile(this, "com.example.test_1.fileprovider", it)
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)  // 사진 촬영 결과 처리
             }
         }
     }
@@ -118,49 +135,72 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             // 촬영한 이미지 파일을 읽어들여 이미지뷰에 표시
             val imgFile = File(currentPhotoPath)
+            println("good")
             if (imgFile.exists()) {
-                imageView.setImageURI(Uri.fromFile(imgFile))
+                imageView.setImageURI(Uri.fromFile(imgFile))  // 이미지뷰에 이미지 표시
 
                 // 이미지를 비트맵으로 변환 후 업로드
-                val bitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-                uploadImage(bitmap)
+                bitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+                println("Image captured successfully. Displaying upload button.")
+                // UI 업데이트는 메인 스레드에서 실행되어야 하므로 runOnUiThread 사용
+                runOnUiThread {
+                    uploadButton.visibility = View.VISIBLE
+                }
+
+            } else {
+                println("Image file does not exist.")
             }
+        } else {
+            println("Request code or result code mismatch.")
         }
+
     }
 
     // 이미지를 서버로 업로드하는 메서드
     private fun uploadImage(bitmap: Bitmap) {
-        val client = OkHttpClient()
-        // 비트맵을 JPEG 형식으로 변환하여 바이트 배열로 저장
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // HTTP 클라이언트 초기화
+                val client = OkHttpClient()
+                // 비트맵 이미지를 JPEG 형식으로 압축하여 바이트 배열로 변환
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                val byteArray = byteArrayOutputStream.toByteArray()
 
-        // 파일의 미디어 타입을 지정
-        val mediaType = "image/jpeg".toMediaType()
-        // 바이트 배열을 요청 본문으로 변환
-        val requestBody: RequestBody = byteArray.toRequestBody(mediaType)
+                // 요청 본문의 미디어 타입 설정
+                val mediaType = "image/jpeg".toMediaType()
+                // 바이트 배열을 요청 본문으로 변환
+                val requestBody: RequestBody = byteArray.toRequestBody(mediaType)
 
-        // 멀티파트 요청 본문을 생성
-        val multipartBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("file", "image.jpg", requestBody)
-            .build()
+                // 멀티파트 요청 본문 생성
+                val multipartBody = MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", "image.jpg", requestBody)
+                    .build()
 
-        // 서버로 요청 보내기
-        val request = Request.Builder()
-            .url("") // 실제 서버 URL로 교체
-            .post(multipartBody)
-            .build()
+                // POST 요청 생성
+                val request = Request.Builder()
+                    .url("http://172.30.1.44:5000")  // 로컬 Flask 서버 주소
+                    .post(multipartBody)
+                    .build()
 
-        // 서버 응답 처리
-        client.newCall(request).execute().use { response ->
-            if (response.isSuccessful) {
-                // 업로드 성공
-                println("Image uploaded successfully")
-            } else {
-                // 업로드 실패
-                println("Image upload failed: ${response.message}")
+                // 서버에 요청 실행 및 응답 처리
+                val response = client.newCall(request).execute()
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        // 업로드 성공 메시지 표시
+                        Toast.makeText(this@MainActivity, "Upload successful!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        // 업로드 실패 메시지 표시
+                        Toast.makeText(this@MainActivity, "Upload failed: ${response.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                // 예외 발생 시 로그 출력
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "An error occurred", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
