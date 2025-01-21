@@ -17,6 +17,9 @@ class_names = {
 # 신뢰도 임계값 설정
 CONFIDENCE_THRESHOLD = 0.3  # 최소 신뢰도 설정 (0.3 = 30%)
 
+# 신뢰도 임계값 설정
+CONFIDENCE_THRESHOLD = 0.3  # 최소 신뢰도 설정 (0.3 = 30%)
+
 # 모델 로드
 print("모델 로드 중...")
 model = YOLO(model_path)  # ultralytics YOLO 모델 로드
