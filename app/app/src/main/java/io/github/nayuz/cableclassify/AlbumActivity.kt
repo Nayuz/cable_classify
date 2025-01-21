@@ -5,10 +5,20 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 
 class AlbumActivity : AppCompatActivity() {
+
+    companion object {
+        private const val GALLERY_REQUEST_CODE = 1234
+    }
+
+    // ActivityResultLauncher 선언
+    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
+
     // ListView를 사용하여 앨범 파일을 보여주기 위한 변수 선언
     private lateinit var albumListView: ListView
 
@@ -26,31 +36,32 @@ class AlbumActivity : AppCompatActivity() {
 
         // ListView와 BackButton을 레이아웃에서 찾기
         albumListView = findViewById(R.id.albumListView)
+        val openGalleryButton: Button = findViewById(R.id.openGalleryButton)
         val backButton: Button = findViewById(R.id.backButton)
 
-        // 앨범 디렉토리에서 ".jpg" 확장자를 가진 파일만 필터링하여 가져오기
-        val imageFiles = albumDirectory.listFiles { _, name -> name.endsWith(".jpg") }
 
-        // 가져온 이미지 파일 목록에서 파일 이름만 추출
-        val imageFileNames = imageFiles?.map { it.name } ?: emptyList()
+        // 갤러리 열기 런처 초기화
+        galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val selectedImageUri: Uri? = result.data?.data // 선택된 이미지의 URI 가져오기
+                selectedImageUri?.let {
+                    // 선택된 이미지 URI를 결과로 반환
+                    val intent = Intent().apply {
+                        data = it
+                    }
+                    setResult(RESULT_OK, intent)
+                    finish() // Activity 종료
+                }
+            }
+        }
 
-        // 이미지 파일 목록을 표시할 어댑터 설정 (단순히 파일 이름만 표시)
-        albumAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, imageFileNames)
-
-        // ListView에 어댑터 연결
-        albumListView.adapter = albumAdapter
-
-        // ListView에서 항목을 클릭했을 때 처리
-        albumListView.setOnItemClickListener { _, _, position, _ ->
-            // 클릭된 이미지 파일을 Uri 형태로 변환
-            val selectedImageFile = imageFiles[position]
-            val selectedImageUri = Uri.fromFile(selectedImageFile)
-
-            // 결과 Intent에 선택한 이미지 파일의 URI를 담아서 반환
-            val intent = Intent()
-            intent.data = selectedImageUri
-            setResult(RESULT_OK, intent)
-            finish() // Activity 종료
+        // 갤러리 열기 버튼 클릭 이벤트
+        openGalleryButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                type = "image/*" // 이미지만 선택 가능
+                addCategory(Intent.CATEGORY_OPENABLE)
+            }
+            galleryLauncher.launch(intent) // 런처를 통해 갤러리 열기
         }
 
         // 뒤로 가기 버튼 클릭 시 현재 Activity 종료

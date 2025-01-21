@@ -37,13 +37,14 @@ print("모델 로드 중...")
 model = YOLO(model_path)  # ultralytics YOLO 모델 로드
 print("모델 로드 완료!")
 
-@app.route('/predict', methods=['POST'])
+@app.route('/', methods=['POST'])
 def predict():
     try:
         # 요청에서 이미지 파일 가져오기
-        if 'image' not in request.files:
+        if 'file' not in request.files:
+            print('error here!')
             return jsonify({"error": "No image file provided"}), 400
-        file = request.files['image']
+        file = request.files['file']
         image = Image.open(io.BytesIO(file.read()))
 
         # 모델 추론

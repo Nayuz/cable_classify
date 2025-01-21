@@ -41,7 +41,7 @@ class CameraHelper(private val context: Context) {
             }
             photoFile?.let {
                 // 파일 URI를 얻기 위해 FileProvider 사용
-                val photoURI: Uri = FileProvider.getUriForFile(context, "com.example.test_1.fileprovider", it)
+                val photoURI: Uri = FileProvider.getUriForFile(context, "io.github.nayuz.cableclassify.fileprovider", it)
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)  // 사진 저장 위치를 지정
                 // 촬영 후 결과를 받을 수 있도록 ActivityForResult 호출
                 (context as MainActivity).startActivityForResult(takePictureIntent, requestCode)

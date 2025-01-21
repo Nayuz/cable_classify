@@ -17,6 +17,12 @@
         android:layout_height="wrap_content"
         android:text="Back" />
 
+    <Button
+        android:id="@+id/openGalleryButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Open Gallery" />
+
     <!-- 앨범 이미지 목록을 위한 RecyclerView -->
 <!--    <RecyclerView-->
 <!--        android:id="@+id/albumRecyclerView"-->
