@@ -36,7 +36,7 @@ class ImageUploader(private val context: MainActivity, private val imageView: Im
 
                 // HTTP POST 요청 생성
                 val request = Request.Builder()
-                    .url("http://192.168.10.122:25565")  // 업로드할 서버 URL
+                    .url("http://192.168.10.122:5000")  // 업로드할 서버 URL
                     .post(multipartBody)  // POST 요청에 멀티파트 바디 추가
                     .build()
 

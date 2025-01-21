@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         //객체 초기화
         cameraHelper = CameraHelper(this)
         albumHelper = AlbumHelper(this)
-        imageUploader = ImageUploader(this)
+        imageUploader = ImageUploader(this, imageView)
 
 
         // 카메라 권한 확인
